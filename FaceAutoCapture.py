@@ -2,7 +2,6 @@ from FaceDetectionModule import FaceDetector
 from multiprocessing import Process
 from datetime import datetime
 from time import sleep
-import RPi.GPIO as GPIO
 import vlc
 import cv2
 import sys
@@ -18,11 +17,6 @@ def play_sound(name, d):
 
 
 if __name__ == "__main__":
-    GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    GPIO.add_event_detect(4, GPIO.RISING, bouncetime=250)
-
     path = "Captures"
     if not os.path.isdir(path):
         os.mkdir(path)
@@ -45,18 +39,17 @@ if __name__ == "__main__":
         _, img = cap.read()
         img, bboxs = detector.findFaces(img)
 
-        if GPIO.event_detected(4):
-            cv2.imwrite(os.path.join(path, dir_name, f"{c}.png"), img)
-            c += 1
-
         if len(bboxs) > faces_number:
 
             for f in bboxs[faces_number - 1:]:
 
                 if f["score"] > min_score:
                     faces_number += 1
-
+                    
                     Process(target=play_sound, args=("found", found_duration, )).start()
+                    
+                    cv2.imwrite(os.path.join(path, dir_name, f"{c}.png"), img)
+                    c += 1
 
         elif len(bboxs) < faces_number:
 
